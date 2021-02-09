@@ -1,4 +1,5 @@
 # SetUp 
+
 library(dataRetrieval)
 library(sf)
 library(dplyr)
@@ -43,9 +44,24 @@ dataAvailable <- whatNWISdata(bBox = c(-78.98523, 36.01312, -78.88892, 36.04652)
 dataAvailable$parm_cd
 
 # WQP
+# whatWQPdata - This returns a data frame with all of the sites that were measured. 
+# Also, in that table, there is a measure of activityCount (how often the site was sampled)
+# resultCount (how many individual results are available).
 dataAvailableWQP <- whatWQPdata(bBox = c(-78.98523, 36.01312, -78.88892, 36.04652))
-# Parameter Codes
-dataAvailable$parm_cd
+
+# readWQPdata - data from the WQP using generalized Web service calls
+WQPData <- readWQPdata(bBox = c(-78.98523, 36.01312, -78.88892, 36.04652))
+WQPData$CharacteristicName
+
+
+# what samples - The function whatWQPsamples returns information on the individual samples collected at a site
+WQPSamples <- whatWQPsamples(bBox = c(-78.98523, 36.01312, -78.88892, 36.04652))
+
+WQPmetrics <- whatWQPmetrics(bBox = c(-78.98523, 36.01312, -78.88892, 36.04652))
+
+#Get URL
+attr(WQPData, "url")
+siteInfo <- attr(WQPData, "siteInfo")
 
 ##############################################################################
 ################################    Test 1    ################################
@@ -61,7 +77,7 @@ class(data_tabular)
 
 # use names() to get spatial data columns
 names(data_tabular)
-# LAT_GAGE is y value and LNG_GAGE is x value
+# LAT is y value and LNG is x value
 
 # convert to sf object
 data_tabular_as_sf <- st_as_sf(data_tabular, coords = c("dec_long_va", "dec_lat_va"), crs = 4269, dim = "XY") # lat long so set CRS = NAD83
@@ -78,14 +94,18 @@ data_tabular_as_sf_wgs84 <- data_tabular_as_sf %>%
 st_crs(data_tabular_as_sf_wgs84)
 
 #Select data within boundary 
+#### NEED TO BUFFER CATCHMENT 
 ec_data <- data_tabular_as_sf_wgs84 %>%
   st_intersection(b)
+
 
 mapview::mapview(b)
 
 mapview::mapview(data_tabular_as_sf_wgs84)
 
 mapview::mapview(ec_data, zcol = "parm_cd", legend = TRUE)
+
+mapview::mapview(ec_data)
 
 
 ### Read site info ###
@@ -96,6 +116,9 @@ siteINFO
 ### Read site info ###
 parameterCd <- ec_data$parm_cd
 parameterINFO <- readNWISpCode(parameterCd)
+
+mapview::mapview(list("Watershed"=b, "Sites"=ec_data), 
+                 col.regions=c("red", "blue"))
 
 
 
