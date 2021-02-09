@@ -8,6 +8,9 @@ library(ggmap)
 # Step 1: Pick point
 # 36.0356035,-78.9001728
 
+## Ellerbe HUC8
+# 03020201
+
 # Step 2: Pass to NLDI
 #https://labs.waterdata.usgs.gov/api/nldi/linked-data/comid/position?f=json&coords=POINT(-78.9%2036.0356)
 x <- -78.9001728
@@ -85,6 +88,14 @@ mapview::mapview(data_tabular_as_sf_wgs84)
 mapview::mapview(ec_data, zcol = "parm_cd", legend = TRUE)
 
 
+### Read site info ###
+siteNumbers <- ec_data$site_no
+siteINFO <- readNWISsite(siteNumbers)
+siteINFO
+
+### Read site info ###
+parameterCd <- ec_data$parm_cd
+parameterINFO <- readNWISpCode(parameterCd)
 
 
 
