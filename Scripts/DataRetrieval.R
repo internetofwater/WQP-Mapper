@@ -2,7 +2,7 @@
 # Rachel Landman 
 # Spring 2021
 
-# Load Packages 
+# Load Packages (you might have to install the packages if you don't have them)
 library(dataRetrieval)
 library(sf)
 library(mapview)
@@ -103,6 +103,5 @@ mapview::mapview(data_tabular_as_sf_wgs84, zcol = "activityCount")
 # Sites within the watershed 
 mapview::mapview(list("Watershed"=b, "Sites"=ec_data), 
                  col.regions=c("blue", "red"), 
-                 homebutton = mapviewGetOption("homebutton"), cex=5,
-                 zcol = "activityCount")
+                 homebutton = mapviewGetOption("homebutton"), cex=5)
 
