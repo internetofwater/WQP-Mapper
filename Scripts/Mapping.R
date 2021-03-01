@@ -36,6 +36,8 @@ ellerbe_watershed12 <- nc_12HUC %>%
   filter(HUC_12 == "030202010403")%>%
   st_geometry()
 
+st_write(ellerbe_watershed12, driver = "ESRI Shapefile", "ellerbe_watershed12_sf")
+
 class(ellerbe_watershed12)
 class(ellerbe_watershed8)
 

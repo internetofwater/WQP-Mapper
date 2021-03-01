@@ -10,50 +10,31 @@ library(dplyr)
 
 getwd()
 
-### GET WATERSHED BOUNDARY FROM NLDI #####
-# Step 1: Pick point
-# 36.0356035,-78.9001728
+### Use NHD Watershed Boundaries
 
-## Ellerbe Creek HUC8
-# 03020201
-
-# Step 2: Pass to NLDI
-#https://labs.waterdata.usgs.gov/api/nldi/linked-data/comid/position?f=json&coords=POINT(-78.9%2036.0356)
-x <- -78.9001728
-y <- 36.0356035
-# gets HC12 basin from NLDI point
-
-point_nldi_basin_get <- function(lat = y, lon = x){
-  query <- paste0("https://labs.waterdata.usgs.gov/api/nldi/linked-data/comid/position?f=json&coords=POINT(",
-                  x," ",y,")")
-  comid <- jsonlite::fromJSON(URLencode(query))
-  query <- gsub("navigation","basin?f=json",comid$features$properties$navigation)
-  basin <- sf::read_sf(query)
-  return(basin)
-}
-b <- point_nldi_basin_get(lat = y, lon = x)
+EC_12HUC <- st_read(here("ellerbe_watershed12_sf", "ellerbe_watershed12_sf.shp"))
 
 # Step 3: Convert watershed to a bbox to feed into WQP 
-bbox <- sf::st_bbox(b)
+bbox <- sf::st_bbox(EC_12HUC)
 bbox
 
 # Step 4: Identify WQP sites within the watershed 
-WQPsites <- whatWQPsites (bBox = c(-78.98523, 36.01312, -78.88892, 36.04652))
+WQPsites <- whatWQPsites (bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax))
 
-write.csv(WQPsites, file = "WQPsites.csv")
+write.csv(WQPsites, file = "WQPsites_NHD.csv")
 
 # Step 5: whatWQPdata - This returns a data frame with all of the sites that were measured. 
 # Also, in that table, there is a measure of activityCount (how often the site was sampled)
 # resultCount (how many individual results are available).
-dataAvailableWQP <- whatWQPdata(bBox = c(-78.98523, 36.01312, -78.88892, 36.04652))
+dataAvailableWQP <- whatWQPdata(bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax))
 
-write.csv(dataAvailableWQP, file = "WQPdataavailable.csv")
+write.csv(dataAvailableWQP, file = "WQPdataavailable_NHD.csv")
 
 # Step 6: readWQPdata - all the data available from the WQP within the bounding box
 # data from the WQP using generalized Web service calls
-WQPData <- readWQPdata(bBox = c(-78.98523, 36.01312, -78.88892, 36.04652))
+WQPData <- readWQPdata(bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax))
 
-write.csv(WQPData, file = "WQPData.csv")
+#write.csv(WQPData, file = "WQPData_NHD.csv")
 
 # Step 7: Subset and Merge data tables 
 joined.siteData <- full_join(WQPsites, dataAvailableWQP, by = NULL, copy = FALSE, suffix = c("MonitoringLocationIdentifier", "MonitoringLocationIdentifier"))
@@ -77,9 +58,10 @@ MonitoringLocations <- unique(merged.WQPData[c("MonitoringLocationIdentifier")])
 
 # what samples 
 # The function whatWQPsamples returns information on the individual samples collected at a site
-WQPSamples <- whatWQPsamples(bBox = c(-78.98523, 36.01312, -78.88892, 36.04652))
+WQPSamples <- whatWQPsamples(bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax))
 
 #Get URL for dataset
+
 attr(joinedData, "url")
 siteInfo <- attr(joinedData, "siteInfo")
 
@@ -112,14 +94,15 @@ st_crs(data_tabular_as_sf_wgs84)
 #Select data within boundary 
 #### NEED TO BUFFER CATCHMENT 
 ec_data <- data_tabular_as_sf_wgs84 %>%
-  st_intersection(b)
+  st_intersection(EC_12HUC)
 
 # Plot with Mapview 
 # Sites within the bounding box
 mapview::mapview(data_tabular_as_sf_wgs84, zcol = "activityCount")
 
 # Sites within the watershed 
-mapview::mapview(list("Sites"=ec_data, "Watershed"=b), 
+
+mapview::mapview(list("Sites"=ec_data, "Watershed"=EC_12HUC), 
                  col.regions=c("red", "blue"), 
                  homebutton = mapviewGetOption("homebutton"), cex=5)
 
