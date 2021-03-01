@@ -12,7 +12,7 @@ getwd()
 
 ### Use NHD Watershed Boundaries
 
-EC_12HUC <- st_read(here("ellerbe_watershed12_sf", "ellerbe_watershed12_sf.shp"))
+EC_12HUC <- st_read(here("Data", "ellerbe_watershed12_sf", "ellerbe_watershed12_sf.shp"))
 
 # Step 3: Convert watershed to a bbox to feed into WQP 
 bbox <- sf::st_bbox(EC_12HUC)
@@ -102,7 +102,54 @@ mapview::mapview(data_tabular_as_sf_wgs84, zcol = "activityCount")
 
 # Sites within the watershed 
 
-mapview::mapview(list("Sites"=ec_data, "Watershed"=EC_12HUC), 
+mapview(list("Sites"=data_tabular_as_sf_wgs84, "Watershed"=EC_12HUC), 
                  col.regions=c("red", "blue"), 
                  homebutton = mapviewGetOption("homebutton"), cex=5)
+
+
+
+
+#### SITES ONLY ###
+# Step 8: Plot Data 
+
+# Coord System for WQP data is NAD83 EPSG:4269
+data_tabular <-
+  as.data.frame(subset.siteData) # use this to drop the tibble classes (i.e., tbl_df and tbl)
+
+# look at class
+class(data_tabular)
+
+# use names() to get spatial data columns
+names(data_tabular)
+# lat is y value and lon is x value
+
+# convert to sf object
+data_tabular_as_sf <- st_as_sf(data_tabular, coords = c("LongitudeMeasure", "LatitudeMeasure"), crs = 4269, dim = "XY") # lat long so set CRS = NAD83
+
+# check class and CRS
+class(data_tabular_as_sf)
+st_crs(data_tabular_as_sf)
+
+#Change crs
+data_tabular_as_sf_wgs84 <- data_tabular_as_sf %>%
+  st_transform(4326)
+
+st_crs(data_tabular_as_sf_wgs84)
+
+#Select data within boundary 
+#### NEED TO BUFFER CATCHMENT 
+ec_data <- data_tabular_as_sf_wgs84 %>%
+  st_intersection(EC_12HUC)
+
+# Plot with Mapview 
+# Sites within the bounding box
+mapview::mapview(data_tabular_as_sf_wgs84, zcol = "activityCount")
+
+# Sites within the watershed 
+
+mapview(list("Sites"=ec_data, "Watershed"=EC_12HUC), 
+        col.regions=c("red", "blue"), 
+        homebutton = mapviewGetOption("homebutton"), cex=5)
+
+
 
