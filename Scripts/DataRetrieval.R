@@ -6,6 +6,7 @@
 library(dataRetrieval)
 library(sf)
 library(mapview)
+library(dplyr)
 
 getwd()
 
@@ -52,9 +53,26 @@ write.csv(dataAvailableWQP, file = "WQPdataavailable.csv")
 # data from the WQP using generalized Web service calls
 WQPData <- readWQPdata(bBox = c(-78.98523, 36.01312, -78.88892, 36.04652))
 
+write.csv(WQPData, file = "WQPData.csv")
+
+# Step 7: Subset and Merge data tables 
+joined.siteData <- full_join(WQPsites, dataAvailableWQP, by = NULL, copy = FALSE, suffix = c("MonitoringLocationIdentifier", "MonitoringLocationIdentifier"))
+subset.siteData <- joined.siteData %>% select(OrganizationIdentifier, MonitoringLocationIdentifier, MonitoringLocationName, MonitoringLocationTypeName, HUCEightDigitCode, LatitudeMeasure, LongitudeMeasure, ProviderName, activityCount, resultCount, StateName, CountyName)
+
+subset.WQPData <- WQPData %>% select(OrganizationIdentifier, ActivityTypeCode, ActivityStartDate, MonitoringLocationIdentifier, CharacteristicName, ProviderName)
+
+merged.WQPData <- merge(subset.WQPData, subset.siteData, by= 
+                          c("MonitoringLocationIdentifier", "OrganizationIdentifier" ))
+
+joinedData <- left_join(subset.siteData, subset.WQPData, by = 
+                          "MonitoringLocationIdentifier")
+
 # List of characteristics and organizations 
-Characteristics <- unique(WQPData[c("CharacteristicName")])
-Organizations <- unique(WQPData[c("OrganizationFormalName")])
+Characteristics <- unique(joinedData[c("CharacteristicName")])
+MonitoringLocation <- unique(joinedData[c("MonitoringLocationIdentifier")])
+
+Characteristics <- unique(merged.WQPData[c("CharacteristicName")])
+MonitoringLocations <- unique(merged.WQPData[c("MonitoringLocationIdentifier")])
 
 
 # what samples 
@@ -62,14 +80,14 @@ Organizations <- unique(WQPData[c("OrganizationFormalName")])
 WQPSamples <- whatWQPsamples(bBox = c(-78.98523, 36.01312, -78.88892, 36.04652))
 
 #Get URL for dataset
-attr(WQPData, "url")
-siteInfo <- attr(WQPData, "siteInfo")
+attr(joinedData, "url")
+siteInfo <- attr(joinedData, "siteInfo")
 
 # Step 7: Plot Data 
 
 # Coord System for WQP data is NAD83 EPSG:4269
 data_tabular <-
-  as.data.frame(dataAvailableWQP) # use this to drop the tibble classes (i.e., tbl_df and tbl)
+  as.data.frame(joinedData) # use this to drop the tibble classes (i.e., tbl_df and tbl)
 
 # look at class
 class(data_tabular)
@@ -79,7 +97,7 @@ names(data_tabular)
 # lat is y value and lon is x value
 
 # convert to sf object
-data_tabular_as_sf <- st_as_sf(data_tabular, coords = c("lon", "lat"), crs = 4269, dim = "XY") # lat long so set CRS = NAD83
+data_tabular_as_sf <- st_as_sf(data_tabular, coords = c("LongitudeMeasure", "LatitudeMeasure"), crs = 4269, dim = "XY") # lat long so set CRS = NAD83
 
 # check class and CRS
 class(data_tabular_as_sf)
@@ -101,7 +119,7 @@ ec_data <- data_tabular_as_sf_wgs84 %>%
 mapview::mapview(data_tabular_as_sf_wgs84, zcol = "activityCount")
 
 # Sites within the watershed 
-mapview::mapview(list("Watershed"=b, "Sites"=ec_data), 
-                 col.regions=c("blue", "red"), 
+mapview::mapview(list("Sites"=ec_data, "Watershed"=b), 
+                 col.regions=c("red", "blue"), 
                  homebutton = mapviewGetOption("homebutton"), cex=5)
 
