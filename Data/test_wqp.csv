@@ -1,0 +1,27 @@
+﻿OrganizationIdentifier,ActivityTypeCode,ActivityStartDate,MonitoringLocationIdentifier,CharacteristicName,ProviderName
+,,,,,
+USGS-NC,Sample-Composite Without Parents,9/27/10,USGS-02086849,Total dissolved solids,NWIS
+USGS-NC,Sample-Routine,5/14/11,USGS-02086849,Nitrate,NWIS
+USGS-NC,Sample-Routine,5/14/11,USGS-02086849,"Hardness, non-carbonate",NWIS
+USGS-NC,Sample-Routine,7/8/11,USGS-02086849,"Hardness, Ca, Mg",NWIS
+USGS-NC,Sample-Routine,5/14/11,USGS-02086849,"Nitrogen, mixed forms (NH3), (NH4), organic, (NO2) and (NO3)",NWIS
+USGS-NC,Sample-Composite Without Parents,9/27/10,USGS-02086849,Chloride,NWIS
+USGS-NC,Sample-Routine,5/14/11,USGS-02086849,"Stream flow, instantaneous",NWIS
+USGS-NC,Sample-Routine,5/14/11,USGS-02086849,Sodium adsorption ratio [(Na)/(sq root of 1/2 Ca + Mg)],NWIS
+21NC02WQ,Field Msr/Obs,5/4/05,21NC02WQ-J1330000,"Temperature, water",STORET
+USGS-NC,Sample-Routine,4/25/12,USGS-0208675010,Oxygen,NWIS
+21NC02WQ,Sample,10/12/98,21NC02WQ-J0770000,Manganese,STORET
+21NC02WQ,Sample,9/24/97,21NC02WQ-J1330000,Cadmium,STORET
+21NC03WQ,Field Msr/Obs,6/6/13,21NC03WQ-J0810000,Dissolved oxygen (DO),STORET
+USGS-NC,Sample-Routine,9/5/97,USGS-02085079,Ammonia and ammonium,NWIS
+21NC02WQ,Field Msr/Obs,6/20/07,21NC02WQ-J1330000,Cloud cover,STORET
+21NC02WQ,Sample,9/23/05,21NC02WQ-J1330000,Inorganic nitrogen (nitrate and nitrite) as N,STORET
+USGS-NC,Sample-Routine,1/4/63,USGS-360434078571901,Total dissolved solids,NWIS
+USGS-NC,Sample-Routine,1/4/63,USGS-360434078571901,"Acidity, (H+)",NWIS
+USGS-NC,Sample-Routine,1/4/63,USGS-360434078571901,"Hardness, Ca, Mg",NWIS
+USGS-NC,Sample-Routine,1/4/63,USGS-360434078571901,Lithium,NWIS
+USGS-NC,Sample-Routine,1/4/63,USGS-360434078571901,Nitrate,NWIS
+USGS-NC,Sample-Routine,1/4/63,USGS-360434078571901,Specific conductance,NWIS
+USGS-NC,Sample-Routine,1/4/63,USGS-360434078571901,pH,NWIS
+USGS-NC,Sample-Routine,1/4/63,USGS-360434078571901,Silica,NWIS
+USGS-NC,Sample-Routine,1/4/63,USGS-360434078571901,Aluminum,NWIS
