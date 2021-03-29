@@ -10,9 +10,10 @@
 library(shiny)
 library(mapview)
 library(leaflet)
+library(sf)
 
 #### Load data 
-WQPData <- read.csv("Outputs/subset.WQPdata_NHD.csv")
+WQPData <- read.csv("subset.WQPdata_NHD.csv")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -30,7 +31,7 @@ ui <- fluidPage(
             selectInput(inputId = "long",
                         label = "longitude",
                         choices = c("-78.9001728",  "-73.99565830140675"),
-                        selected = "78.9001728"),
+                        selected = "-78.9001728"),
             selectInput(inputId = "CharacteristicName",
                         label = "Characteristic",
                         choices = c("Sulfate",  "Alkalinity"),
@@ -43,11 +44,11 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
     URL <- paste0("https://hydro.nationalmap.gov/arcgis/rest/services/NHDPlus_HR/MapServer/11/query?where=&text=&objectIds=&time=&geometry=",
-                      long,",",lat,
+                      "-78.9001728",",","36.0356035",
                       "&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=geojson")
     H <- read_sf(URL)
-    mapPlot <- reactive({mapview(H)})
-    output$mapPlot <- renderMapview(mapPlot())
+    mapPlot <- ({mapview(H)})
+    output$mapPlot <- renderMapview(mapPlot)
     }
 
 # Run the application 
