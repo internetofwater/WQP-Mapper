@@ -7,8 +7,8 @@ library(sf)
 library(dataRetrieval)
 
 # Assign Variables 
-lat <- 36.0356035
-long <- -78.9001728
+lat <- 36.0356035 # 40.6972313874088 
+long <- -78.9001728  # -73.99565830140675
 
 # Get HUC12 from ESRI API
 URL <- paste0("https://hydro.nationalmap.gov/arcgis/rest/services/NHDPlus_HR/MapServer/11/query?where=&text=&objectIds=&time=&geometry=",
