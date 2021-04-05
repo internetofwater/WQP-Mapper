@@ -67,7 +67,8 @@ server <- function(input, output, session) {
     
     output$mymap <- renderLeaflet({
         leaflet() %>%
-            addProviderTiles(providers$Esri.WorldTopoMap)
+            addProviderTiles(providers$Esri.WorldTopoMap) %>%
+            setView(lng=-79.8373764,lat=35.5465094,zoom=7)
         # addTiles() %>% 
         
     })
@@ -80,7 +81,7 @@ server <- function(input, output, session) {
         
         proxy <- leafletProxy("mymap")
         proxy %>% 
-            addPolygons(data = H, popup = "Watershed")
+            addPolygons(data = H, popup = H$NAME)
     })
 }
 
