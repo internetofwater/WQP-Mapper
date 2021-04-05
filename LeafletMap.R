@@ -1,10 +1,12 @@
-# NHD Esri API 
+# Leaflet Map 
 # Rachel Landman 
 # Spring 2021
 
 # Load packages
 library(sf)
 library(dataRetrieval)
+library(leaflet)
+library(sp)
 
 # Assign Variables 
 lat <- 36.0356035 # 40.6972313874088 
@@ -17,9 +19,8 @@ URL <- paste0("https://hydro.nationalmap.gov/arcgis/rest/services/NHDPlus_HR/Map
 H <- read_sf(URL)
 mapview::mapview(H)
 
-bbox <- st_bbox(H)
-bbox
-
-# Test to see if it works with data retreival
-WQPsites <- whatWQPsites(bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax))
-
+# Leaflet
+map <- leaflet() %>%
+  addTiles() %>% 
+  addPolygons(data = H, popup = "Watershed")
+map

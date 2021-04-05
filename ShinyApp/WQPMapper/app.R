@@ -47,9 +47,10 @@ server <- function(input, output) {
                       "-78.9001728",",","36.0356035",
                       "&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=geojson")
     H <- read_sf(URL)
-    mapPlot <- ({mapview(H)})
+    mapPlot <- mapview(H)
     output$mapPlot <- renderMapview(mapPlot)
-    }
+    mapviewOutput(mapPlot, width = "100%", height = 400)
+}
 
 # Run the application 
 shinyApp(ui = ui, server = server)

@@ -172,14 +172,25 @@ mapview(list("Sites"=ec_data_sites, "Watershed"=EC_12HUC_albers),
         homebutton = mapviewGetOption("homebutton"), cex=5)
 
 # Join data 
-WQPData.ALL2 <- right_join(subset.WQPdata, ec_data_sites, by = NULL, copy = FALSE, suffix = c("MonitoringLocationIdentifier", "MonitoringLocationIdentifier"))
+WQPData.ALL2 <- left_join(ec_data_sites, subset.WQPdata, by = NULL, copy = FALSE, suffix = c("MonitoringLocationIdentifier", "MonitoringLocationIdentifier"))
 
 # Pivot wider 
 ### DataALL.wide <- pivot_wider(WQPData.ALL, id_cols = NULL, names_from = Characteristics, values_from = count("CharacteristicName"))
-
 
 WQPdata_summary2 <- WQPData.ALL2 %>% group_by(MonitoringLocationIdentifier, CharacteristicName) %>% 
   mutate(minDate = min(ActivityStartDate), maxdate = max(ActivityStartDate)) %>% 
   ungroup() %>% group_by(MonitoringLocationIdentifier, CharacteristicName, ActivityStartDate) %>% add_tally() 
 
 
+class(WQPdata_summary2)
+st_crs(WQPdata_summary2)
+
+mapview(WQPdata_summary2)
+
+
+# Make each characteristic its own dataframe (List of dataframes)
+Characteristics <- split( WQPdata_summary2 , f = WQPdata_summary2$CharacteristicName )
+
+# call specific dataframes from list 
+varname <- "Barium"
+mapview(Characteristics[varname])
