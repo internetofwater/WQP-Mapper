@@ -22,5 +22,7 @@ mapview::mapview(H)
 # Leaflet
 map <- leaflet() %>%
   addTiles() %>% 
-  addPolygons(data = H, popup = "Watershed")
+  addPolygons(data = H, popup = H$NAME)
 map
+
+
