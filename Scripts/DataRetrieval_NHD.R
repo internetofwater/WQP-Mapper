@@ -194,3 +194,13 @@ Characteristics <- split( WQPdata_summary2 , f = WQPdata_summary2$Characteristic
 # call specific dataframes from list 
 varname <- "Barium"
 mapview(Characteristics[varname])
+
+
+WQPSites <- whatWQPsites (bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>% 
+  select(OrganizationIdentifier, MonitoringLocationIdentifier, MonitoringLocationTypeName, HUCEightDigitCode, LatitudeMeasure, LongitudeMeasure, ProviderName)
+Sites <- WQPSites %>% 
+  as.data.frame() %>%
+  st_as_sf(coords = c("LongitudeMeasure", "LatitudeMeasure"), crs = 4269, dim = "XY") %>%
+  st_transform(102008)
+
+mapview(Sites)

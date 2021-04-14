@@ -9,6 +9,10 @@
 
 library(shiny)
 library(leaflet)
+library(sf)
+library(dataRetrieval)
+library(dplyr)
+library(tidyr)
 
 r_colors <- rgb(t(col2rgb(colors()) / 255))
 names(r_colors) <- colors()
@@ -21,14 +25,6 @@ ui <- fluidPage(
     
     sidebarLayout(
         sidebarPanel(
-            selectInput(inputId = "lat",
-                        label = "latitude",
-                        choices = c("36.0356035", "40.6972313874088"),
-                        selected = "36.0356035"),
-            selectInput(inputId = "long",
-                        label = "longitude",
-                        choices = c("-78.9001728",  "-73.99565830140675"),
-                        selected = "-78.9001728"),
             selectInput(inputId = "CharacteristicName",
                         label = "Characteristic",
                         choices = c("Sulfate",  "Alkalinity"),
@@ -38,7 +34,7 @@ ui <- fluidPage(
     leafletOutput("mymap")
 ))
 
-# Define server logic required to draw a histogram
+# Define server logic 
 server <- function(input, output, session) {
 
     points <- eventReactive(input$recalc, {
@@ -78,11 +74,18 @@ server <- function(input, output, session) {
       H <- read_sf(paste0("https://hydro.nationalmap.gov/arcgis/rest/services/NHDPlus_HR/MapServer/11/query?where=&text=&objectIds=&time=&geometry=",
                                      click$lng,",",click$lat,
                                      "&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=geojson"))
-      
+      bbox <- sf::st_bbox(H)
+      WQPSites <- whatWQPsites (bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>% 
+        select(OrganizationIdentifier, MonitoringLocationIdentifier, MonitoringLocationTypeName, HUCEightDigitCode, LatitudeMeasure, LongitudeMeasure, ProviderName)
+      Sites <- WQPSites %>% 
+        as.data.frame() %>%
+        st_as_sf(coords = c("LongitudeMeasure", "LatitudeMeasure"), crs = 4269, dim = "XY")
       proxy <- leafletProxy("mymap")
       proxy %>% 
-        addPolygons(data = H, popup = H$NAME)
+        addPolygons(data = H, popup = H$NAME) %>%
+        addMarkers(data = Sites)
     })
+    
 }
 
 # Run the application 
