@@ -23,7 +23,8 @@ bbox <- sf::st_bbox(H)
 WQPData <- readWQPdata(bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>%
   select(MonitoringLocationIdentifier, ActivityTypeCode, ActivityStartDate, CharacteristicName, ProviderName)
 
-
+WQP_split <- split(WQPData, f=WQPData$CharacteristicName)
+names <- names(WQP_split)
 
 WQPData_filtered <- WQPData %>% 
   filter(CharacteristicName == "Phosphorus" | CharacteristicName == "Nitrate" |  CharacteristicName == "Organic Nitrogen")
