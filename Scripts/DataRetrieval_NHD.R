@@ -196,6 +196,7 @@ varname <- "Barium"
 mapview(Characteristics[varname])
 
 
+# Pipe for Shiny App
 WQPSites <- whatWQPsites (bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>% 
   select(OrganizationIdentifier, MonitoringLocationIdentifier, MonitoringLocationTypeName, HUCEightDigitCode, LatitudeMeasure, LongitudeMeasure, ProviderName)
 Sites <- WQPSites %>% 
@@ -204,3 +205,23 @@ Sites <- WQPSites %>%
   st_transform(102008)
 
 mapview(Sites)
+
+x <- -78.9001728
+y <- 36.0356035
+H <- read_sf(paste0("https://hydro.nationalmap.gov/arcgis/rest/services/NHDPlus_HR/MapServer/11/query?where=&text=&objectIds=&time=&geometry=",
+                    x,",",y,
+                    "&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=geojson"))
+bbox <- sf::st_bbox(H)
+Watershed <- H %>%
+  st_transform(102008)
+WQPSites <- whatWQPsites (bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>% 
+  select(OrganizationIdentifier, MonitoringLocationIdentifier, MonitoringLocationTypeName, HUCEightDigitCode, LatitudeMeasure, LongitudeMeasure, ProviderName)
+Sites <- WQPSites %>% 
+  as.data.frame() %>%
+  st_as_sf(coords = c("LongitudeMeasure", "LatitudeMeasure"), crs = 4269, dim = "XY") %>%
+  st_transform(102008) %>%
+  st_intersection(Watershed)
+
+mapview(Sites)
+bbox$xmin
+  

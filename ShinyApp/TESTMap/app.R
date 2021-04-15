@@ -27,8 +27,8 @@ ui <- fluidPage(
         sidebarPanel(
             selectInput(inputId = "CharacteristicName",
                         label = "Characteristic",
-                        choices = c("Sulfate",  "Alkalinity"),
-                        selected = "Sulfate")
+                        choices = WQPDataFiltered$CharacteristicName,
+                        selected = "Phosphorus")
         ),
 
     leafletOutput("mymap")
@@ -75,16 +75,29 @@ server <- function(input, output, session) {
                                      click$lng,",",click$lat,
                                      "&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=geojson"))
       bbox <- sf::st_bbox(H)
+      Watershed <- H %>%
+        st_transform(102008)
+      
       WQPSites <- whatWQPsites (bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>% 
         select(OrganizationIdentifier, MonitoringLocationIdentifier, MonitoringLocationTypeName, HUCEightDigitCode, LatitudeMeasure, LongitudeMeasure, ProviderName)
       Sites <- WQPSites %>% 
         as.data.frame() %>%
-        st_as_sf(coords = c("LongitudeMeasure", "LatitudeMeasure"), crs = 4269, dim = "XY")
+        st_as_sf(coords = c("LongitudeMeasure", "LatitudeMeasure"), crs = 4269, dim = "XY", proj=longlat, datum=WGS84) %>%
+        st_transform(102008) %>%
+        st_intersection(Watershed)
+     
+       WQPData <- readWQPdata(bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>%
+        select(MonitoringLocationIdentifier, ActivityTypeCode, ActivityStartDate, CharacteristicName, ProviderName)
+       
+       WQPDataFiltered <- WQPData %>%
+         filter(CharacteristicName == "Phosphorus" | CharacteristicName == "Nitrate" |  CharacteristicName == "Organic Nitrogen")
+      
       proxy <- leafletProxy("mymap")
       proxy %>% 
         addPolygons(data = H, popup = H$NAME) %>%
-        addMarkers(data = Sites)
+        addMarkers(data = Sites, popup = Sites$MonitoringLocationIdentifier)
     })
+    
     
 }
 
