@@ -23,23 +23,25 @@ ui <- fluidPage(
   # Application title
   titlePanel("TEST Map"),
   
+  
+  
   sidebarLayout(
-    sidebarPanel(
-      selectInput(inputId = "CharacteristicName",
-                  label = "Characteristic",
-                  choices = names,
-                  selected = "Phosphorus")
-    ),
-    
+  #   sidebarPanel(
+  #     selectInput(inputId = "CharacteristicName",
+  #                 label = "Characteristic",
+  #                 choices = names,
+  #                 selected = "Phosphorus")
+  #   ),
+    mainPanel(
     leafletOutput("mymap")
-  ))
+  )))
 
 # Define server logic 
 server <- function(input, output, session) {
   
-  points <- eventReactive(input$recalc, {
-    cbind(rnorm(40) * 2 + 13, rnorm(40) + 48)
-  }, ignoreNULL = FALSE)
+ # points <- eventReactive(input$recalc, {
+ #   cbind(rnorm(40) * 2 + 13, rnorm(40) + 48)
+ # }, ignoreNULL = FALSE)
   
   latInput <- reactive({
     switch(input$lat, 
