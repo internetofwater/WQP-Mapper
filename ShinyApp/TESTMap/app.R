@@ -6,6 +6,7 @@
 #
 #    http://shiny.rstudio.com/
 #
+if (interactive()) {
 
 library(shiny)
 library(leaflet)
@@ -13,6 +14,7 @@ library(sf)
 library(dataRetrieval)
 library(dplyr)
 library(tidyr)
+library(shinyWidgets)
 
 r_colors <- rgb(t(col2rgb(colors()) / 255))
 names(r_colors) <- colors()
@@ -23,19 +25,18 @@ ui <- fluidPage(
   # Application title
   titlePanel("TEST Map"),
   
-  
-  
-  sidebarLayout(
-  #   sidebarPanel(
-  #     selectInput(inputId = "CharacteristicName",
-  #                 label = "Characteristic",
-  #                 choices = names,
-  #                 selected = "Phosphorus")
-  #   ),
-    mainPanel(
+  fluidRow(
+    column(
+      width = 5, offset = 1,
+      pickerInput(
+        inputId = "p1",
+        label = "classic update",
+        choices = names(WQP_split)
+      )
+    ),
     leafletOutput("mymap")
-  )))
-
+  ))
+  
 # Define server logic 
 server <- function(input, output, session) {
   
@@ -86,14 +87,14 @@ server <- function(input, output, session) {
       st_transform(4326) %>%
       st_filter(H)
     
-    # WQPData <- readWQPdata(bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>%
-    #    select(MonitoringLocationIdentifier, ActivityTypeCode, ActivityStartDate, CharacteristicName, ProviderName)
+    WQPData <- readWQPdata(bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>%
+        select(MonitoringLocationIdentifier, ActivityTypeCode, ActivityStartDate, CharacteristicName, ProviderName)
     
     # WQPDataFiltered <- WQPData %>%
     #     filter(CharacteristicName == "Phosphorus" | CharacteristicName == "Nitrate" |  CharacteristicName == "Organic Nitrogen")
     
     WQP_split <- split(WQPData, f=WQPData$CharacteristicName)
-    names <- names(WQP_split)
+  #  names <- names(WQP_split)
     
     proxy <- leafletProxy("mymap")
     proxy %>% 
@@ -105,3 +106,5 @@ server <- function(input, output, session) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
+}
