@@ -34,6 +34,20 @@ ui <- fluidPage(
         choices = names(WQP_split)
       )
     ),
+    fluidRow(
+      column(
+        width = 10, offset = 1,
+        sliderInput(
+          inputId = "up",
+          label = "Activity Start Date",
+          width = "50%",
+          min = min(WQPData$ActivityStartDate),
+          max = max(WQPData$ActivityStartDate),
+          value = min(WQPData$ActivityStartDate),
+          step = 0.1
+        )
+      )
+    ),
     leafletOutput("mymap")
   ))
   
@@ -93,14 +107,32 @@ server <- function(input, output, session) {
     # WQPDataFiltered <- WQPData %>%
     #     filter(CharacteristicName == "Phosphorus" | CharacteristicName == "Nitrate" |  CharacteristicName == "Organic Nitrogen")
     
-    WQP_split <- split(WQPData, f=WQPData$CharacteristicName)
+    WQP_split2 <- split(WQPData, f=WQPData$CharacteristicName)
   #  names <- names(WQP_split)
+    
+### Update colum input
+  # Method 1
+    updatePickerInput(session = session, inputId = "p1",
+                      choices = rownames(WQP_split2))
+   
+  # Method 2
+    disabled_choices <- !rownames(WQP_split) %in% rownames(WQP_split2)
+    updatePickerInput(
+      session = session, inputId = "p2",
+      choices = rownames(WQP_split),
+      choicesOpt = list(
+        disabled = disabled_choices,
+        style = ifelse(disabled_choices,
+                       yes = "color: rgba(119, 119, 119, 0.5);",
+                       no = "")
+      )
+    )
     
     proxy <- leafletProxy("mymap")
     proxy %>% 
       addPolygons(data = H, popup = H$NAME) %>%
       addMarkers(data = Sites, popup = Sites$MonitoringLocationIdentifier)
-  })
+  }, ignoreInit = TRUE)
   
 }
 
