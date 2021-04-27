@@ -133,14 +133,15 @@ if (interactive()) {
      #                    no = "")
      #   )
     #  )
-      
+      pal <- colorFactor("RdYlBu", domain=Sites$OrganizationIdentifier)
      # proxy <- leafletProxy("mymap")
       leafletProxy("mymap") %>% 
         clearMarkers() %>%
         clearShapes() %>%
         removeHomeButton() %>%
         addPolygons(data = H, popup = H$NAME) %>% addHomeButton(ext = extent(Sites), group= "Selected HUC12") %>%
-        addMarkers(data = Sites, popup = Sites$MonitoringLocationIdentifier)  
+        addCircleMarkers(data = Sites, popup = paste(Sites$MonitoringLocationIdentifier, "<br>",
+                                                     Sites$OrganizationIdentifier), color =pal(Sites$OrganizationIdentifier) ) 
     }, ignoreInit = TRUE)
     
   }
