@@ -32,7 +32,12 @@ if (interactive()) {
         pickerInput(
           inputId = "p1",
           label = "Choose Parameter(s) of Interest",
-          choices = c("First, select a watershed by clicking on the map") #names(WQP_split)
+          choices = c("First, select a watershed by clicking on the map"),
+          multiple=TRUE,
+          options=pickerOptions(actionsBox=TRUE,
+                       liveSearch=TRUE,
+                       showTick=TRUE,
+                       virtualScroll=TRUE)#names(WQP_split)
         )
       ),
       fluidRow(
