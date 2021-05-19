@@ -20,9 +20,21 @@ EC_12HUC <- st_read(here("Data", "ellerbe_watershed12_sf", "ellerbe_watershed12_
 bbox <- sf::st_bbox(EC_12HUC)
 bbox
 
+mapview(EC_12HUC)
+
 #[-78.84116917762904, 36.0070796158602] , [-78.84129411082718, 36.00679405420703] , [-78.84152610703751, 36.006026679214386]
+
 WQPsites <- whatWQPsites (bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax))
 
+## TEST WQP
+WQPsites <- whatWQPsites (bBox=c(-83.0,36.5,-81.0,38.5))
+
+sites <- whatNWISsites(bBox=c(-83.0,36.5,-81.0,38.5), 
+                       parameterCd=c("00010","00060"),
+                       hasDataTypeCd="dv")
+
+sitesNJ <- whatWQPsites(statecode="US:34",
+                        characteristicName="Chloride")
 
 # Step 4: Identify WQP sites within the watershed 
 WQPsites <- whatWQPsites (bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax))

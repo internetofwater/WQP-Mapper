@@ -23,3 +23,26 @@ bbox
 # Test to see if it works with data retreival
 WQPsites <- whatWQPsites(bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax))
 
+# Bounding Circle
+circle <- lwgeom::st_minimum_bounding_circle(H)
+
+mapview::mapview(circle)
+
+# Transform crs 
+area <- st_area(circle)
+area
+area <- units::set_units(area, mi^2)
+radius <- sqrt(area/pi)
+radius
+
+
+WQPsites <- whatWQPsites(lat = lat, long = long, within = radius)
+
+
+Sites <- WQPsites %>% 
+  as.data.frame() %>%
+  st_as_sf(coords = c("LongitudeMeasure", "LatitudeMeasure"), crs = 4269, dim = "XY") %>%
+  st_transform(4326) %>%
+  st_filter(H)
+
+mapview::mapview(Sites)
