@@ -135,9 +135,9 @@ if (interactive()) {
       # Transform crs 
       area <- st_area(circle)
       area <- units::set_units(area, mi^2)
-      radius <- sqrt(area/pi)
+      radius <- as.numeric(sqrt(area/pi))
       
-      WQPSites <- whatWQPsites(lat = click$lat, long = click$long, within = radius) %>% 
+      WQPSites <- whatWQPsites(lat = click$lat, long = click$lng, within = radius) %>% 
         dplyr::select(OrganizationIdentifier, MonitoringLocationIdentifier, MonitoringLocationTypeName, HUCEightDigitCode, LatitudeMeasure, LongitudeMeasure, ProviderName)
       
       Sites <- WQPSites %>% 
@@ -147,7 +147,7 @@ if (interactive()) {
         st_filter(H)
   
       # Comment below to not rely on server
-       WQPData <- readWQPdata(lat = lat, long = long, within = radius) %>%
+       WQPData <- readWQPdata(lat = click$lat, long = click$lng, within = radius) %>%
          dplyr::select(MonitoringLocationIdentifier, ActivityTypeCode, ActivityStartDate, CharacteristicName, ProviderName)
       #WQPData <- read.csv("Outputs/WQPData_NHD.csv")
       # WQPDataFiltered <- WQPData %>%
