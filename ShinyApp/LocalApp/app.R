@@ -31,11 +31,11 @@ library(here)
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Local App"),
+    titlePanel("Ellerbe Creek Water Quality Portal Data"),
 
     fluidRow(
         column(
-            width = 5, offset = 1,
+            width = 10, offset = 1,
             pickerInput(
                 inputId = "p1",
                 label = "Choose Parameter(s) of Interest",
@@ -48,21 +48,12 @@ ui <- fluidPage(
             )
         ),
         fluidRow(
-            #   column(
-            #     width = 10, offset = 1,
-            #     sliderInput(
-            #       inputId = "up",
-            #       label = "Activity Start Date",
-            #       width = "50%",
-            #       min = 1980,
-            #       max = 2020,
-            #       value = 1980,
-            #       step = 0.1
-            #     )
-            #   ),
             column(
                 width = 10, offset = 1,
-                dateRangeInput("dates", h3("Activity Start Date")))
+                dateRangeInput("dates", h3("Activity Start Date"),
+                               label = "Select Date Range",
+                               start = "1960-01-01",
+                               end = Sys.Date()))
         ),
         leafletOutput("mymap"),
     ))
@@ -94,43 +85,69 @@ server <- function(input, output, session) {
          })
 
     WQP_split <- split(WQPData, f=WQPData$CharacteristicName)
-    WQP_split2 <- split(WQPData, f=WQPData$CharacteristicName)
     
     ### Update colum input
     # Method 1
     updatePickerInput(session = session, inputId = "p1",
-                      choices = names(WQP_split2))
+                      choices = names(WQP_split))
     
-    saveData <- function(data) {
-        data <- t(data)
-        # Create a unique file name 
-        fileName <- sprintf("%s.csv", H$NAME)
-        # Write the file to the local system
-        write.csv(
-            x = data,
-            file = file.path(fileName), 
-            row.names = FALSE, quote = TRUE
-        )
-    }
+    updateDateRangeInput(session = session, "inDateRange",
+                         label = paste("Date range label", WQPData$ActivityStartDate),
+                         start = paste("2013-01-", WQPData$ActivityStartDate, sep=""),
+                         end = paste("2013-12-", WQPData$ActivityStartDate, sep=""))
+    # 
+    # saveData <- function(data) {
+    #     data <- t(data)
+    #     # Create a unique file name 
+    #     fileName <- sprintf("%s.csv", H$NAME)
+    #     # Write the file to the local system
+    #     write.csv(
+    #         x = data,
+    #         file = file.path(fileName), 
+    #         row.names = FALSE, quote = TRUE
+    #     )
+    # }
+    
+    DateCharacter <- as.character(WQPData$ActivityStartDate)
+    Date <- as.Date(WQPData$ActivityStartDate)
     
     observeEvent(input$p1, {
         WQPDataFiltered <- WQPData %>%
-            #filter(CharacteristicName == ".beta.-Hexachlorocyclohexane")
-            filter(CharacteristicName %in% input$p1 
-                   # & ActivityStartDate > selected input and < selected input
-                   )
-        
-        FilteredSites <- Sites %>% 
+            filter(CharacteristicName %in% input$p1)
+            #filter(DateCharacter, between(date, input$date[1], input$date[2]))
+            #filter(Date > as.Date(input$dates[1]) & Date < as.Date(input$dates[2]))
+
+        FilteredSites <- Sites %>%
             filter(MonitoringLocationIdentifier %in% WQPDataFiltered$MonitoringLocationIdentifier)
-        
-        leafletProxy("mymap") %>% 
+
+        leafletProxy("mymap") %>%
             clearMarkers() %>%
             clearShapes() %>%
             removeHomeButton() %>%
             addPolygons(data = H, popup = H$NAME) %>% addHomeButton(ext = extent(Sites), group= "Selected HUC12") %>%
-            addMarkers(data = FilteredSites, popup = FilteredSites$MonitoringLocationIdentifier)  
+            addMarkers(data = FilteredSites, popup = FilteredSites$MonitoringLocationIdentifier)
     }, ignoreInit = TRUE)
     
+#     WQPDataFiltered <- reactive({
+#         m <- filter(WQPData,
+#                     CharacteristicName %in% input$p1 &
+#                         Date > as.Date(input$dates[1]) & 
+#                         Date < as.Date(input$dates[2]))
+#     })
+#     
+#     FilteredSites <- Sites %>% 
+#         filter(MonitoringLocationIdentifier %in% WQPDataFiltered$MonitoringLocationIdentifier)
+#     
+#     output$map <- renderLeaflet({ leafletProxy("mymap") %>%  
+#         clearMarkers() %>%
+#         clearShapes() %>%
+#         removeHomeButton() %>%
+#         addPolygons(data = H, popup = H$NAME) %>% addHomeButton(ext = extent(Sites), group= "Selected HUC12") %>%
+#                 addMarkers(data = FilteredSites, popup = FilteredSites$MonitoringLocationIdentifier)
+#         }, ignoreInit = TRUE)
+# 
+# leafletOutput('map')
+
 }
     
 
