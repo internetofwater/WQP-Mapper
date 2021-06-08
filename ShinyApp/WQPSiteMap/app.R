@@ -61,9 +61,6 @@ if (interactive()) {
             bbox <- sf::st_bbox(H)
             H <- st_transform(H, 4326)
             
-            # WQPSites <- whatWQPsites (bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>% 
-            #     dplyr::select(OrganizationIdentifier, MonitoringLocationIdentifier, MonitoringLocationTypeName, HUCEightDigitCode, LatitudeMeasure, LongitudeMeasure, ProviderName)
-            
             ### Bounding Circle 
             circle <- lwgeom::st_minimum_bounding_circle(H)
             

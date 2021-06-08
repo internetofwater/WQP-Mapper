@@ -6,6 +6,7 @@
 #
 #    http://shiny.rstudio.com/
 #
+
 if (interactive()) {
     
     library(shiny)
@@ -25,7 +26,7 @@ if (interactive()) {
     ui <- fluidPage(
         
         # Application title
-        titlePanel("WQP Map"),
+        titlePanel("TEST Map"),
         
         fluidRow(
             column(
@@ -42,28 +43,47 @@ if (interactive()) {
                 )
             ),
             fluidRow(
+                #   column(
+                #     width = 10, offset = 1,
+                #     sliderInput(
+                #       inputId = "up",
+                #       label = "Activity Start Date",
+                #       width = "50%",
+                #       min = 1980,
+                #       max = 2020,
+                #       value = 1980,
+                #       step = 0.1
+                #     )
+                #   ),
                 column(
                     width = 10, offset = 1,
-                    sliderInput(
-                        inputId = "up",
-                        label = "Activity Start Date",
-                        width = "50%",
-                        min = 1980,
-                        max = 2020,
-                        value = 1980,
-                        step = 0.1
-                    )
-                )
+                    dateRangeInput("dates", h3("Activity Start Date")))
             ),
+            # 
+            # airYearpickerInput(
+            #   inputId = "multiple",
+            #   label = "Activity Start Date",
+            #   placeholder = "Please select a date range",
+            #   multiple = FALSE, 
+            #   minDate = 1980,
+            #   maxDate = 2020,
+            #   range = TRUE,
+            #   clearButton = TRUE
+            # ),
+            # verbatimTextOutput("res"),
+            # 
+            # sliderTextInput(
+            #   inputId = "Id096",
+            #   label = "Activity Start Date", 
+            #   choices = month.abb,
+            #   selected = month.abb[c(4, 8)]
+            # ),
+            
             leafletOutput("mymap"),
         ))
     
     # Define server logic 
     server <- function(input, output, session) {
-        
-        # points <- eventReactive(input$recalc, {
-        #   cbind(rnorm(40) * 2 + 13, rnorm(40) + 48)
-        # }, ignoreNULL = FALSE)
         
         latInput <- reactive({
             switch(input$lat, 
@@ -100,17 +120,29 @@ if (interactive()) {
                                 "&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&having=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=geojson"))
             bbox <- sf::st_bbox(H)
             H <- st_transform(H, 4326)
-            WQPSites <- whatWQPsites (bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>% 
+            
+            ### Bounding Circle 
+            circle <- lwgeom::st_minimum_bounding_circle(H)
+            
+            ### Transform crs 
+            area <- st_area(circle)
+            area <- units::set_units(area, mi^2)
+            radius <- as.numeric(sqrt(area/pi))
+            
+            WQPSites <- whatWQPsites(lat = click$lat, long = click$lng, within = radius) %>% 
                 dplyr::select(OrganizationIdentifier, MonitoringLocationIdentifier, MonitoringLocationTypeName, HUCEightDigitCode, LatitudeMeasure, LongitudeMeasure, ProviderName)
+        
+            
             Sites <- WQPSites %>% 
                 as.data.frame() %>%
                 st_as_sf(coords = c("LongitudeMeasure", "LatitudeMeasure"), crs = 4269, dim = "XY") %>%
                 st_transform(4326) %>%
                 st_filter(H)
             
-            WQPData <- readWQPdata(bBox = c(bbox$xmin, bbox$ymin, bbox$xmax, bbox$ymax)) %>%
+            # Comment below to not rely on server
+            WQPData <- readWQPdata(lat = click$lat, long = click$lng, within = radius) %>%
                 dplyr::select(MonitoringLocationIdentifier, ActivityTypeCode, ActivityStartDate, CharacteristicName, ProviderName)
-            
+            #WQPData <- read.csv("Outputs/WQPData_NHD.csv")
             # WQPDataFiltered <- WQPData %>%
             #     filter(CharacteristicName == "Phosphorus" | CharacteristicName == "Nitrate" |  CharacteristicName == "Organic Nitrogen")
             
@@ -134,6 +166,23 @@ if (interactive()) {
             #                    no = "")
             #   )
             #  )
+            
+            # Update the input for the airdate in the UI
+            WQPData$ActivityStartDate <- renderPrint (input$multiple)
+            
+            
+            # Save file to local drive 
+            saveData <- function(data) {
+                data <- t(data)
+                # Create a unique file name 
+                fileName <- sprintf("%s.csv", H$NAME)
+                # Write the file to the local system
+                write.csv(
+                    x = data,
+                    file = file.path(fileName), 
+                    row.names = FALSE, quote = TRUE
+                )
+            }
             
             # proxy <- leafletProxy("mymap")
             leafletProxy("mymap") %>% 
@@ -160,9 +209,10 @@ if (interactive()) {
                 addMarkers(data = FilteredSites, popup = FilteredSites$MonitoringLocationIdentifier)  
         }, ignoreInit = TRUE)
         
-    }
+    } 
     
     # Run the application 
     shinyApp(ui = ui, server = server)
     
+}
 }
