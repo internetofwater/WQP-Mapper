@@ -59,7 +59,7 @@ ui <- fluidPage(
     ))
 
 
-# Define server logic required to draw a histogram
+# Define server logic
 server <- function(input, output, session) {
     
     WQPData <- read.csv("CopyOfWQPData_NHD.csv") %>%
@@ -95,21 +95,10 @@ server <- function(input, output, session) {
                          label = paste("Date range label", WQPData$ActivityStartDate),
                          start = paste("2013-01-", WQPData$ActivityStartDate, sep=""),
                          end = paste("2013-12-", WQPData$ActivityStartDate, sep=""))
-    # 
-    # saveData <- function(data) {
-    #     data <- t(data)
-    #     # Create a unique file name 
-    #     fileName <- sprintf("%s.csv", H$NAME)
-    #     # Write the file to the local system
-    #     write.csv(
-    #         x = data,
-    #         file = file.path(fileName), 
-    #         row.names = FALSE, quote = TRUE
-    #     )
-    # }
+  
     
-    DateCharacter <- as.character(WQPData$ActivityStartDate)
-    Date <- as.Date(WQPData$ActivityStartDate)
+    # DateCharacter <- as.character(WQPData$ActivityStartDate)
+    # Date <- as.Date(WQPData$ActivityStartDate)
     
     observeEvent(input$p1, {
         WQPDataFiltered <- WQPData %>%
@@ -153,3 +142,5 @@ server <- function(input, output, session) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
+
