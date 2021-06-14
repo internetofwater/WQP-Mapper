@@ -28,7 +28,8 @@ library(here)
 # EC_12HUC <- st_read(here("Data", "ellerbe_watershed12_sf", "ellerbe_watershed12_sf.shp"))
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
+if (interactive()) {
+  ui <- fluidPage(
 
     # Application title
     titlePanel("Ellerbe Creek Water Quality Portal Data"),
@@ -56,6 +57,12 @@ ui <- fluidPage(
                                end = Sys.Date()))
         ),
         leafletOutput("mymap"),
+        
+        fluidRow(
+          column(12,
+                 dataTableOutput('table')
+          )
+        ),
     ))
 
 
@@ -63,7 +70,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
     
     WQPData <- read.csv("CopyOfWQPData_NHD.csv") %>%
-        dplyr::select(MonitoringLocationIdentifier, ActivityTypeCode, ActivityStartDate, CharacteristicName, ProviderName)
+        dplyr::select(MonitoringLocationIdentifier, ActivityTypeCode, ActivityStartDate, CharacteristicName, ProviderName) 
     
     WQPSites <- read.csv("CopyOfWQPsites_NHD.csv") %>% 
         dplyr::select(OrganizationIdentifier, MonitoringLocationIdentifier, MonitoringLocationTypeName, HUCEightDigitCode, LatitudeMeasure, LongitudeMeasure, ProviderName)
@@ -78,13 +85,15 @@ server <- function(input, output, session) {
         st_transform(4326) %>%
         st_filter(H)
     
+    ECWQPData <- filter(WQPData, MonitoringLocationIdentifier %in% Sites$MonitoringLocationIdentifier)
+    
     output$mymap <- renderLeaflet({
         leaflet() %>% addProviderTiles(providers$Esri.WorldTopoMap) %>%
          addPolygons(data = H, popup = H$NAME)%>%
          addMarkers(data = Sites, popup = Sites$MonitoringLocationIdentifier) 
          })
 
-    WQP_split <- split(WQPData, f=WQPData$CharacteristicName)
+    WQP_split <- split(ECWQPData, f=WQPData$CharacteristicName)
     
     ### Update colum input
     # Method 1
@@ -101,7 +110,7 @@ server <- function(input, output, session) {
     # Date <- as.Date(WQPData$ActivityStartDate)
     
     observeEvent(input$p1, {
-        WQPDataFiltered <- WQPData %>%
+        WQPDataFiltered <- ECWQPData %>%
             filter(CharacteristicName %in% input$p1)
             #filter(DateCharacter, between(date, input$date[1], input$date[2]))
             #filter(Date > as.Date(input$dates[1]) & Date < as.Date(input$dates[2]))
@@ -136,6 +145,22 @@ server <- function(input, output, session) {
 #         }, ignoreInit = TRUE)
 # 
 # leafletOutput('map')
+    
+    output$table <- renderDataTable(Sites)
+    
+    observeEvent(input$p1, {
+      WQPDataFiltered <- ECWQPData %>% 
+        filter(CharacteristicName %in% input$p1)
+      
+      output$table <- renderDataTable(WQPDataFiltered)}, ignoreInit = TRUE)
+    
+    # observeEvent(input$p1, {
+    #   WQPDataFiltered <- WQPData %>%
+    #   #filter(CharacteristicName %in% input$p1)
+    #   filter(DateCharacter, between(date, input$date[1], input$date[2]))
+    #   #filter(Date > as.Date(input$dates[1]) & Date < as.Date(input$dates[2]))
+    # 
+    #   output$table <- renderDataTable(WQPDataFiltered)}, ignoreInit = TRUE)
 
 }
     
@@ -143,4 +168,4 @@ server <- function(input, output, session) {
 # Run the application 
 shinyApp(ui = ui, server = server)
 
-
+}
