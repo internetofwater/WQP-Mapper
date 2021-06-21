@@ -27,7 +27,13 @@ if (interactive()) {
         
         # Application title
         titlePanel("Water Quality Portal Monitoring Site Map"),
+        
+        mainPanel("Select a location on the map to identify the watershed boundary and retrieve
+                  monitoring site locations from the Water Quality Portal. Zoom in and out and pan across to select 
+                  any watershed in the United States."),
+        
             leafletOutput("mymap"),
+    
         
         fluidRow(
             column(12,
