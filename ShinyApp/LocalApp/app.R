@@ -18,15 +18,6 @@ library(leafem)
 library(raster)
 library(here)
 
-# Load Data 
-# WQPData <- read.csv("CopyOfWQPData_NHD.csv") %>%
-#     dplyr::select(MonitoringLocationIdentifier, ActivityTypeCode, ActivityStartDate, CharacteristicName, ProviderName)
-# 
-# WQPSites <- read.csv("ShinyApp/LocalApp/CopyOfWQPsites_NHD.csv") %>% 
-#     dplyr::select(OrganizationIdentifier, MonitoringLocationIdentifier, MonitoringLocationTypeName, HUCEightDigitCode, LatitudeMeasure, LongitudeMeasure, ProviderName)
-# 
-# EC_12HUC <- st_read(here("Data", "ellerbe_watershed12_sf", "ellerbe_watershed12_sf.shp"))
-
 # Define UI for application that draws a histogram
 if (interactive()) {
   ui <- fluidPage(
@@ -48,14 +39,17 @@ if (interactive()) {
                                       virtualScroll=TRUE)#names(WQP_split)
             )
         ),
-        fluidRow(
-            column(
-                width = 10, offset = 1,
-                dateRangeInput("dates", h3("Activity Start Date"),
-                               label = "Select Date Range",
-                               start = "1960-01-01",
-                               end = Sys.Date()))
-        ),
+        
+        ### Allow user to select date range 
+        # fluidRow(
+        #     column(
+        #         width = 10, offset = 1,
+        #         dateRangeInput("dates", h3("Activity Start Date"),
+        #                        label = "Select Date Range",
+        #                        start = "1960-01-01",
+        #                        end = Sys.Date()))
+        # ),
+        
         leafletOutput("mymap"),
         
         fluidRow(
@@ -86,6 +80,7 @@ server <- function(input, output, session) {
         st_filter(H)
     
     ECWQPData <- filter(WQPData, MonitoringLocationIdentifier %in% Sites$MonitoringLocationIdentifier)
+    ECSites <- filter(WQPSites, MonitoringLocationIdentifier %in% Sites$MonitoringLocationIdentifier)
     
     output$mymap <- renderLeaflet({
         leaflet() %>% addProviderTiles(providers$Esri.WorldTopoMap) %>%
@@ -95,25 +90,19 @@ server <- function(input, output, session) {
 
     WQP_split <- split(ECWQPData, f=WQPData$CharacteristicName)
     
-    ### Update colum input
-    # Method 1
+    ### Update column input
+    
     updatePickerInput(session = session, inputId = "p1",
                       choices = names(WQP_split))
     
-    updateDateRangeInput(session = session, "inDateRange",
-                         label = paste("Date range label", WQPData$ActivityStartDate),
-                         start = paste("2013-01-", WQPData$ActivityStartDate, sep=""),
-                         end = paste("2013-12-", WQPData$ActivityStartDate, sep=""))
-  
-    
-    # DateCharacter <- as.character(WQPData$ActivityStartDate)
-    # Date <- as.Date(WQPData$ActivityStartDate)
+    # updateDateRangeInput(session = session, "inDateRange",
+    #                      label = paste("Date range label", WQPData$ActivityStartDate),
+    #                      start = paste("2013-01-", WQPData$ActivityStartDate, sep=""),
+    #                      end = paste("2013-12-", WQPData$ActivityStartDate, sep=""))
     
     observeEvent(input$p1, {
         WQPDataFiltered <- ECWQPData %>%
             filter(CharacteristicName %in% input$p1)
-            #filter(DateCharacter, between(date, input$date[1], input$date[2]))
-            #filter(Date > as.Date(input$dates[1]) & Date < as.Date(input$dates[2]))
 
         FilteredSites <- Sites %>%
             filter(MonitoringLocationIdentifier %in% WQPDataFiltered$MonitoringLocationIdentifier)
@@ -126,27 +115,7 @@ server <- function(input, output, session) {
             addMarkers(data = FilteredSites, popup = FilteredSites$MonitoringLocationIdentifier)
     }, ignoreInit = TRUE)
     
-#     WQPDataFiltered <- reactive({
-#         m <- filter(WQPData,
-#                     CharacteristicName %in% input$p1 &
-#                         Date > as.Date(input$dates[1]) & 
-#                         Date < as.Date(input$dates[2]))
-#     })
-#     
-#     FilteredSites <- Sites %>% 
-#         filter(MonitoringLocationIdentifier %in% WQPDataFiltered$MonitoringLocationIdentifier)
-#     
-#     output$map <- renderLeaflet({ leafletProxy("mymap") %>%  
-#         clearMarkers() %>%
-#         clearShapes() %>%
-#         removeHomeButton() %>%
-#         addPolygons(data = H, popup = H$NAME) %>% addHomeButton(ext = extent(Sites), group= "Selected HUC12") %>%
-#                 addMarkers(data = FilteredSites, popup = FilteredSites$MonitoringLocationIdentifier)
-#         }, ignoreInit = TRUE)
-# 
-# leafletOutput('map')
-    
-    output$table <- renderDataTable(Sites)
+    output$table <- renderDataTable(ECSites)
     
     observeEvent(input$p1, {
       WQPDataFiltered <- ECWQPData %>% 
@@ -154,10 +123,33 @@ server <- function(input, output, session) {
       
       output$table <- renderDataTable(WQPDataFiltered)}, ignoreInit = TRUE)
     
+    #### Attempts at allowing user to filter by date 
+    
+    #     WQPDataFiltered <- reactive({
+    #         m <- filter(WQPData,
+    #                     CharacteristicName %in% input$p1 &
+    #                         Date > as.Date(input$dates[1]) & 
+    #                         Date < as.Date(input$dates[2]))
+    #     })
+    #     
+    #     FilteredSites <- Sites %>% 
+    #         filter(MonitoringLocationIdentifier %in% WQPDataFiltered$MonitoringLocationIdentifier)
+    #     
+    #     output$map <- renderLeaflet({ leafletProxy("mymap") %>%  
+    #         clearMarkers() %>%
+    #         clearShapes() %>%
+    #         removeHomeButton() %>%
+    #         addPolygons(data = H, popup = H$NAME) %>% addHomeButton(ext = extent(Sites), group= "Selected HUC12") %>%
+    #                 addMarkers(data = FilteredSites, popup = FilteredSites$MonitoringLocationIdentifier)
+    #         }, ignoreInit = TRUE)
+    # 
+    # leafletOutput('map')
+    
+    
     # observeEvent(input$p1, {
     #   WQPDataFiltered <- WQPData %>%
     #   #filter(CharacteristicName %in% input$p1)
-    #   filter(DateCharacter, between(date, input$date[1], input$date[2]))
+    #   #filter(DateCharacter, between(date, input$date[1], input$date[2]))
     #   #filter(Date > as.Date(input$dates[1]) & Date < as.Date(input$dates[2]))
     # 
     #   output$table <- renderDataTable(WQPDataFiltered)}, ignoreInit = TRUE)

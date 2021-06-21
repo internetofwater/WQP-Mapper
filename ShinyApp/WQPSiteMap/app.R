@@ -28,6 +28,10 @@ if (interactive()) {
         # Application title
         titlePanel("Water Quality Portal Monitoring Site Map"),
             leafletOutput("mymap"),
+        
+        fluidRow(
+            column(12,
+                   dataTableOutput('table'))),
         )
     
     # Define server logic 
@@ -78,6 +82,8 @@ if (interactive()) {
                 st_transform(4326) %>%
                 st_filter(H)
             
+            WatershedSites <- filter(WQPSites, MonitoringLocationIdentifier %in% Sites$MonitoringLocationIdentifier)
+            
             # proxy <- leafletProxy("mymap")
             leafletProxy("mymap") %>% 
                 clearMarkers() %>%
@@ -85,7 +91,19 @@ if (interactive()) {
                 removeHomeButton() %>%
                 addPolygons(data = H, popup = H$NAME) %>% addHomeButton(ext = extent(Sites), group= "Selected HUC12") %>%
                 addMarkers(data = Sites, popup = Sites$MonitoringLocationIdentifier)  
+            
+            output$table <- renderDataTable(WatershedSites)
+            
         }, ignoreInit = TRUE)
+        
+            
+        
+        # observeEvent(input$p1, {
+        #     WQPDataFiltered <- WQPSites %>% 
+        #         filter(CharacteristicName %in% input$p1)
+        #     
+        #     output$table <- renderDataTable(WQPDataFiltered)}, ignoreInit = TRUE)
+        
         
     }
     
