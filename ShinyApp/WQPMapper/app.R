@@ -27,7 +27,11 @@ if (interactive()) {
     ui <- fluidPage(
         
         # Application title
-        titlePanel("TEST Map"),
+        titlePanel("Water Quality Portal Data Map"),
+        
+        mainPanel("Select a location on the map to identify the watershed boundary and retrieve
+                  monitoring site locations from the Water Quality Portal. Zoom in and out and pan across to select 
+                  any watershed in the United States."),
         
         fluidRow(
             column(
@@ -50,6 +54,10 @@ if (interactive()) {
             ),
             
             leafletOutput("mymap"),
+            
+            fluidRow(
+                column(12,
+                       dataTableOutput('table'))),
         ))
     
     # Define server logic 
@@ -99,6 +107,8 @@ if (interactive()) {
                 st_transform(4326) %>%
                 st_filter(H)
             
+            WatershedSites <- filter(WQPSites, MonitoringLocationIdentifier %in% Sites$MonitoringLocationIdentifier)
+            
             # Comment below to not rely on server
             WQPData <- readWQPdata(lat = click$lat, long = click$lng, within = radius) %>%
                 dplyr::select(MonitoringLocationIdentifier, ActivityTypeCode, ActivityStartDate, CharacteristicName, ProviderName)
@@ -117,6 +127,9 @@ if (interactive()) {
                 removeHomeButton() %>%
                 addPolygons(data = H, popup = H$NAME) %>% addHomeButton(ext = extent(Sites), group= "Selected HUC12") %>%
                 addMarkers(data = Sites, popup = Sites$MonitoringLocationIdentifier)  
+            
+            output$table <- renderDataTable(WatershedSites)
+            
         }, ignoreInit = TRUE)
         
         
@@ -133,7 +146,15 @@ if (interactive()) {
                 removeHomeButton() %>%
                 addPolygons(data = H, popup = H$NAME) %>% addHomeButton(ext = extent(Sites), group= "Selected HUC12") %>%
                 addMarkers(data = FilteredSites, popup = FilteredSites$MonitoringLocationIdentifier)
+        
+            
         }, ignoreInit = TRUE)
+       
+        observeEvent(input$p1, {
+            WQPDataFiltered <- ECWQPData %>% 
+                filter(CharacteristicName %in% input$p1)
+            
+            output$table <- renderDataTable(WQPDataFiltered)}, ignoreInit = TRUE)
         
     } 
     
